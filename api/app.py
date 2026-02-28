@@ -1,82 +1,46 @@
 from flask import Flask, request, jsonify
+from core.regras import registrar_gasto, obter_saldo
 
 app = Flask(__name__)
 
-# ============================
-# ROTA RAIZ (STATUS DA API)
-# ============================
+# =========================
+# ROTA DE STATUS
+# =========================
 @app.route("/", methods=["GET"])
-def home():
+def status():
     return jsonify({
         "status": "API Agente Financeiro online"
     })
 
 
-# ============================
-# ROTA WHATSAPP (BOT)
-# ============================
+# =========================
+# ROTA WHATSAPP (HTTP)
+# =========================
 @app.route("/api/whatsapp", methods=["POST"])
 def whatsapp():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
-    mensagem = data.get("mensagem", "").strip().lower()
-    telefone = data.get("telefone")
+    mensagem = (data.get("mensagem") or "").strip().lower()
 
-    # ============================
-    # COMANDO: !gastei
-    # ============================
     if mensagem.startswith("gastei"):
-        partes = mensagem.split()
+        _, resposta = registrar_gasto(mensagem)
+        return jsonify({"resposta": resposta})
 
-        # Validação básica
-        if len(partes) < 3:
-            return jsonify({
-                "resposta": (
-                    "❌ Uso incorreto.\n"
-                    "Formato correto:\n"
-                    "!gastei VALOR DESCRIÇÃO\n\n"
-                    "Exemplo:\n"
-                    "!gastei 50 mercado"
-                )
-            })
+    if mensagem == "saldo":
+        return jsonify({"resposta": obter_saldo()})
 
-        # Tenta converter o valor
-        try:
-            valor = float(partes[1])
-            descricao = " ".join(partes[2:])
-
-            return jsonify({
-                "resposta": (
-                    "💸 *Gasto registrado com sucesso!*\n\n"
-                    f"Valor: R$ {valor:.2f}\n"
-                    f"Descrição: {descricao}"
-                )
-            })
-
-        except ValueError:
-            return jsonify({
-                "resposta": (
-                    "❌ Valor inválido.\n"
-                    "Use apenas números.\n\n"
-                    "Exemplo:\n"
-                    "!gastei 50 mercado"
-                )
-            })
-
-    # ============================
-    # COMANDO DESCONHECIDO
-    # ============================
     return jsonify({
         "resposta": (
             "❓ Comando não reconhecido.\n\n"
             "Comandos disponíveis:\n"
-            "!gastei VALOR DESCRIÇÃO"
+            "- gastei VALOR DESCRIÇÃO\n"
+            "- saldo"
         )
     })
 
 
-# ============================
-# START DA APLICAÇÃO
-# ============================
+# =========================
+# START LOCAL
+# =========================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
