@@ -25,7 +25,7 @@ def whatsapp():
     # ============================
     # COMANDO: !gastei
     # ============================
-    if mensagem.startswith("!gastei"):
+    if mensagem.startswith("gastei"):
         partes = mensagem.split()
 
         # Validação básica
