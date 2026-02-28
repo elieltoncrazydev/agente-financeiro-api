@@ -1,17 +1,20 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-# Rota raiz para teste de status da API
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({"status": "API Agente Financeiro online"})
 
-# (Futuras rotas do agente financeiro entram aqui)
-# ex: /mensagem, /saldo, /relatorio, etc.
+@app.route("/api/whatsapp", methods=["POST"])
+def whatsapp():
+    data = request.get_json()
+    mensagem = data.get("mensagem")
+    telefone = data.get("telefone")
 
-# ==============================
-# PONTO CRÍTICO PARA DEPLOY
-# ==============================
+    return jsonify({
+        "resposta": "✅ Bot conectado com sucesso! Mensagem recebida."
+    })
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
